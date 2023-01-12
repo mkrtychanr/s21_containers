@@ -69,6 +69,13 @@ class list<T> {
   void unique();
   
   void sort();
+
+ private:
+  struct ListNode<value_type> {
+    value_type value = value_type();
+    ListNode* previous = nullptr;
+    ListNode* next = nullptr;
+  };
 };
 
 #endif  // CPP2_S21_CONTAINERS_SRC_S21_LIST_H_
