@@ -1,26 +1,25 @@
 #include "s21_list.h"
 #include <iostream>
 
-class Test {
-  public:
-    Test(int val) : value(val) {}
-    int& operator*() { return value; }
-    void GetAdress() {
-      std::cout<<&value<<std::endl;
-    }
-
-  private:
-    int value = 5;
-};
+void printList(const list<int> l) {
+  for (auto it = l.begin(); it != l.end(); ++it) {
+    std::cout<<*it<<" ";
+  }
+  std::cout<<std::endl;
+}
 
 int main() {
-  list<int> test;
-  for (int i = 0; i < 21; i++) {
-    test.push_back(i);
+  list<int> a;
+  list<int> b;
+  for (int i = 10; i < 50; i += 10) {
+    a.push_back(i);
+    b.push_back(i/10);
   }
-  const list<int> test1 = test;
-  std::cout<<test1.size()<<std::endl;
-  auto it = test1.begin();
-  *it = 5;
+  a.splice(a.begin(), b);
+  printList(a);
+  a.reverse();
+  printList(a);
+  list<int> c {1, 2, 4, 2};
+  printList(c);
   return 0;
 }
