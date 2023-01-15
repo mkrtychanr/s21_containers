@@ -1,7 +1,7 @@
-#include "s21_list.h"
+#include "headers/s21_list.h"
 #include <iostream>
 
-void printList(const list<int> l) {
+void printList(const s21::list<int> l) {
   for (auto it = l.begin(); it != l.end(); ++it) {
     std::cout<<*it<<" ";
   }
@@ -9,8 +9,8 @@ void printList(const list<int> l) {
 }
 
 int main() {
-  list<int> a;
-  list<int> b;
+  s21::list<int> a;
+  s21::list<int> b;
   for (int i = 10; i < 50; i += 10) {
     a.push_back(i);
     b.push_back(i/10);
@@ -19,7 +19,7 @@ int main() {
   printList(a);
   a.reverse();
   printList(a);
-  list<int> c {1, 2, 4, 2};
+  s21::list<int> c {1, 2, 4, 2};
   printList(c);
   return 0;
 }
