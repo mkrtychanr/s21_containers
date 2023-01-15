@@ -1,9 +1,13 @@
-#ifndef CPP2_S21_CONTAINERS_SRC_S21_LIST_H_
-#define CPP2_S21_CONTAINERS_SRC_S21_LIST_H_
+#ifndef CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
+#define CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
 
 #include <cstddef>
 #include <cstdio>
 #include <iostream>
+
+
+
+namespace s21 {
 
 template <typename T>
 class list {
@@ -373,7 +377,7 @@ class list {
   //дописать когда будет готов vector
   void sort();
 
- private:
+private:
 
   pointer first_ = nullptr;
 
@@ -388,5 +392,6 @@ class list {
     ListNode(value_type value = value_type(), ListNode* previous = nullptr, ListNode* next = nullptr) : value_(value), previous_(previous), next_(next) {}
   };
 };
+}
 
-#endif  // CPP2_S21_CONTAINERS_SRC_S21_LIST_H_
+#endif  // CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
