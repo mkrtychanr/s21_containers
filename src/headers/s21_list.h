@@ -1,204 +1,92 @@
-#ifndef CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
-#define CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
+#ifndef CPP2_S21_CONTAINERS_0_SRC_HEADERS_S21_LIST_H_
+#define CPP2_S21_CONTAINERS_0_SRC_HEADERS_S21_LIST_H_
 
 #include <cstddef>
-#include <cstdio>
-#include <iostream>
+#include <limits>
+#include <utility>
 
-
+#include "iterators/s21_list_iterators.h"
+#include "s21_list_node.h"
+#include "s21_vector.h"
 
 namespace s21 {
 
 template <typename T>
 class list {
- private:
-  struct ListNode;
+  template <typename key_type, typename mapped_type>
+  friend class map;
+
+  template <typename key_type>
+  friend class set;
 
  public:
-  class ListIterator;
-  class ListConstIterator;
-
   using value_type = T;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using iterator = ListIterator;
-  using const_iterator = ListConstIterator;
+  using iterator = ListIterator<T>;
+  using const_iterator = ListConstIterator<T>;
   using size_type = size_t;
-  using pointer = ListNode*;
+  using pointer = ListNode<T>*;
 
-  class ListIterator {
-    friend class list;
-    friend class ListConstIterator;
-   public:
-    ListIterator() {}
+  list() : end_(new ListNode(value_type())) {}
 
-    ListIterator(const iterator& other) { operator=(other); }
-
-    iterator& operator=(const iterator& other) {
-      node_ = other.node_;
-      SetCoPointers();
-      return *this;
-    }
-    
-    iterator& operator++() { 
-      node_ = next_;
-      SetCoPointers();
-      return *this;
-    }
-
-    iterator& operator--() {
-      node_ = previous_;
-      SetCoPointers();
-      return *this;
-    }
-
-    reference operator*() { return node_ -> value_; }
-
-    friend bool operator==(const iterator& lhs, const iterator& rhs) {
-      return lhs.node_ == rhs.node_;
-    }
-
-    friend bool operator!=(const iterator& lhs, const iterator& rhs) {
-      return !(lhs == rhs);
-    }
-
-   private:
-
-    ListIterator(const pointer node) : node_(node) { SetCoPointers(); }
-
-    void SetCoPointers() {
-      if (node_ != nullptr) {
-        previous_ = node_->previous_;
-        next_ = node_->next_;
-      }
-    }
-
-    pointer node_ = nullptr;
-
-    pointer previous_ = nullptr;
-
-    pointer next_ = nullptr;
-
-  };
-
-  class ListConstIterator {
-    friend class list;
-   public:
-    ListConstIterator() {}
-
-    ListConstIterator(const const_iterator& other) { operator=(other); }
-
-    ListConstIterator(const iterator& it) : node_(it.node_) { SetCoPointers(); }
-
-    const_iterator& operator=(const const_iterator& other) {
-      node_ = other.node_;
-      SetCoPointers();
-      return *this;
-    }
-    
-    const_iterator& operator++() { 
-      node_ = next_;
-      SetCoPointers();
-      return *this;
-    }
-
-    const_iterator& operator--() {
-      node_ = previous_;
-      SetCoPointers();
-      return *this;
-    }
-
-    const_reference operator*() { return node_ -> value_; }
-
-    friend bool operator==(const const_iterator& lhs, const const_iterator& rhs) {
-      return lhs.node_ == rhs.node_;
-    }
-
-    friend bool operator!=(const const_iterator& lhs, const const_iterator& rhs) {
-      return !(lhs == rhs);
-    }
-
-   private:
-
-    ListConstIterator(const pointer node) : node_(node) { SetCoPointers(); }
-
-    void SetCoPointers() {
-      if (node_ != nullptr) {
-        previous_ = node_->previous_;
-        next_ = node_->next_;
-      }
-    }
-
-    pointer node_ = nullptr;
-
-    pointer previous_ = nullptr;
-
-    pointer next_ = nullptr;
-
-  };
-
-  list() {
-    clear();
-  }
-
-  list(size_type n) {
-    list();
-    for (size_type i = 0; i < n; i++) {
+  explicit list(size_type n) : list() {
+    for (size_type i = 0; i < n; i += 1) {
       push_back(value_type());
     }
   }
 
-  list(std::initializer_list<value_type> const &items) {
-    clear();
-    for (auto& i : items) {
+  list(std::initializer_list<value_type> const& items) : list() {
+    for (const auto& i : items) {
       push_back(i);
     }
   }
 
-  list(const list& l) {
-    operator=(l);
-  }
+  list(const list& l) : list() { operator=(l); }
 
-  list(list&& l) {
-    operator=(std::move(l));
-  }
+  list(list&& l) : list() { operator=(std::move(l)); }
 
   ~list() {
     clear();
+    delete end_;
   }
 
-  list& operator=(list &&l) {
+  list& operator=(list&& l) {
     if (this != &l) {
-      this -> first_ = l.first_;
-      this -> last_ = l.last_;
-      this -> size_ = l.size_;
+      clear();
+      first_ = l.first_;
+      last_ = l.last_;
+      size_ = l.size_;
+      end_->previous_ = last_;
+      if (last_ != nullptr) last_->next_ = end_;
       l.first_ = nullptr;
       l.last_ = nullptr;
+      l.end_->previous_ = nullptr;
       l.size_ = 0;
     }
     return *this;
   }
 
   list& operator=(const list& l) {
-    clear();
-    for (const_iterator it = l.begin(); it != l.end(); ++it) {
-      push_back(*it);
+    if (this != &l) {
+      clear();
+      for (const_iterator it = l.begin(); it != l.end(); ++it) {
+        push_back(*it);
+      }
     }
     return *this;
   }
 
   reference front() {
     if (first_ == nullptr) {
-      push_back(0);
-      return front();
+      throw "Collection is empty";
     }
     return first_->value_;
   }
 
   reference back() {
     if (last_ == nullptr) {
-      push_back(0);
-      return back();
+      throw "Collection is empty";
     }
     return last_->value_;
   }
@@ -218,30 +106,25 @@ class list {
   }
 
   iterator begin() {
+    if (size_ == 0) return iterator(end_);
     return iterator(first_);
   }
 
-  iterator end() {
-    return iterator(nullptr);
-  }
+  iterator end() { return iterator(end_); }
 
   const_iterator begin() const {
+    if (size_ == 0) return const_iterator(end_);
     return const_iterator(first_);
   }
 
-  const_iterator end() const {
-    return const_iterator(nullptr);
-  }
+  const_iterator end() const { return const_iterator(end_); }
 
   bool empty() const { return size_ == 0; }
 
   size_type size() const { return size_; }
 
-  // надо доделать, работает 100 процентов не так,
-  // возможно, что нужно высчитывать максимальное значение в памяти,
-  // а не просто максимум size_type
   size_type max_size() const noexcept {
-    return std::numeric_limits<size_type>::max();
+    return (std::numeric_limits<size_type>::max() / sizeof(ListNode<T>) / 2);
   }
 
   void clear() {
@@ -250,57 +133,60 @@ class list {
     }
     first_ = nullptr;
     last_ = nullptr;
+    end_->previous_ = nullptr;
   }
 
   iterator insert(iterator pos, const_reference value) {
     if (size_ + 1 > max_size()) throw "Maximum of container";
     iterator returnIterator = iterator();
-    if (pos.node_ == nullptr) {
+    if (pos.node_ == end_) {
       if (last_ == nullptr) {
-        last_ = new ListNode(value);
+        last_ = new ListNode<value_type>(value);
         first_ = last_;
         returnIterator = iterator(last_);
       } else {
-        last_ = new ListNode(value, last_);
+        last_ = new ListNode<value_type>(value, last_);
         last_->previous_->next_ = last_;
         returnIterator = iterator(last_);
       }
+      last_->next_ = end_;
+      end_->previous_ = last_;
     } else if (pos.node_->previous_ == nullptr) {
-      first_ = new ListNode(value, nullptr, first_);
+      first_ = new ListNode<value_type>(value, nullptr, first_);
       first_->next_->previous_ = first_;
-      returnIterator = iterator(first_); 
+      returnIterator = iterator(first_);
     } else {
-      auto newNode = new ListNode(value, pos.node_->previous_, pos.node_);
+      auto newNode =
+          new ListNode<value_type>(value, pos.node_->previous_, pos.node_);
       newNode->previous_->next_ = newNode;
       newNode->next_->previous_ = newNode;
       returnIterator = iterator(newNode);
     }
-    size_++;
+    size_ += 1;
     return returnIterator;
   }
 
   void erase(iterator pos) {
-    if (pos.node_ != nullptr) {
-      auto newNextForPrevious = pos.node_ -> next_;
-      auto newPreviousForNext = pos.node_ -> previous_;
-      if (pos.node_ -> previous_ != nullptr) {
-        pos.node_ -> previous_ -> next_ = newNextForPrevious;
+    if (size_ != 0 && pos.node_ != nullptr && pos.node_ != end_) {
+      if (size_ == 1) {
+        first_ = nullptr;
+        last_ = nullptr;
+        delete end_->previous_;
+        end_->previous_ = nullptr;
       } else {
-        first_ = newNextForPrevious;
+        if (pos.node_ == first_) {
+          deleteFirst_();
+        } else if (pos.node_ == last_) {
+          deleteLast_();
+        } else {
+          deleteInTheMiddle_(pos.node_);
+        }
       }
-      if (pos.node_ -> next_ != nullptr) {
-        pos.node_ -> next_ -> previous_ = newPreviousForNext;
-      } else {
-        last_ = newPreviousForNext;
-      }
-      delete pos.node_;
-      size_--;
+      size_ -= 1;
     }
   }
 
-  void push_back(const_reference value) {
-    insert(end(), value);
-  }
+  void push_back(const_reference value) { insert(iterator(end_), value); }
 
   void pop_back() {
     if (!empty()) {
@@ -309,19 +195,23 @@ class list {
   }
 
   void push_front(const_reference value) {
-    insert(begin(), value);
+    if (empty()) {
+      push_back(value);
+    } else {
+      insert(begin(), value);
+    }
   }
 
   void pop_front() {
     if (!empty()) {
-      erase(first_);
+      erase(iterator(first_));
     }
   }
 
   void swap(list& other) {
-    auto temp = list(std::move(other));
-    other = *this;
-    *this = list(std::move(temp));
+    auto temp = std::move(other);
+    other = std::move(*this);
+    *this = std::move(temp);
   }
 
   void merge(list& other) {
@@ -329,7 +219,8 @@ class list {
     auto temp = list(size_ + other.size_);
     auto lhsIterator = begin();
     auto rhsIterator = other.begin();
-    for (auto newIterator = temp.begin(); newIterator != temp.end(); ++newIterator) {
+    for (auto newIterator = temp.begin(); newIterator != temp.end();
+         ++newIterator) {
       if (lhsIterator != end() && rhsIterator != other.end()) {
         if (*lhsIterator < *rhsIterator) {
           *newIterator = *lhsIterator;
@@ -362,7 +253,7 @@ class list {
   void reverse() {
     auto leftIterator = begin();
     auto rigthIterator = iterator(last_);
-    for (size_type i = 0; i < size_/2; i++) {
+    for (size_type i = 0; i < size_ / 2; i += 1) {
       auto temp = *leftIterator;
       *leftIterator = *rigthIterator;
       *rigthIterator = temp;
@@ -371,27 +262,67 @@ class list {
     }
   }
 
-  //дописать когда будет готов set
-  void unique();
-  
-  //дописать когда будет готов vector
-  void sort();
+  void unique() {
+    auto it = begin();
+    auto actual = *it;
+    ++it;
+    while (it != end()) {
+      if (*it == actual) {
+        erase(it);
+      } else {
+        actual = *it;
+      }
+      ++it;
+    }
+  }
 
-private:
+  void sort() {
+    vector<value_type> nums;
+    nums.resize(size_);
+    int i = 0;
+    for (auto it = begin(); it != end(); ++it) {
+      nums[i] = *it;
+      i++;
+    }
+    nums.sort();
+    i = 0;
+    for (auto it = begin(); it != end(); ++it) {
+      *it = nums[i];
+      i++;
+    }
+  }
 
+ private:
   pointer first_ = nullptr;
 
   pointer last_ = nullptr;
 
+  pointer end_ = nullptr;
+
   size_type size_ = 0;
 
-  struct ListNode {
-    value_type value_ = value_type();
-    ListNode* previous_ = nullptr;
-    ListNode* next_ = nullptr;
-    ListNode(value_type value = value_type(), ListNode* previous = nullptr, ListNode* next = nullptr) : value_(value), previous_(previous), next_(next) {}
-  };
-};
-}
+  void deleteFirst_() {
+    first_ = first_->next_;
+    delete first_->previous_;
+    first_->previous_ = nullptr;
+  }
 
-#endif  // CPP2_S21_CONTAINERS_SRC_HEADERS_S21_LIST_H_
+  void deleteLast_() {
+    last_ = last_->previous_;
+    delete end_->previous_;
+    end_->previous_ = last_;
+    last_->next_ = end_;
+  }
+
+  void deleteInTheMiddle_(pointer node) {
+    auto newPrevious = node->previous_;
+    auto newNext = node->next_;
+    delete node;
+    newPrevious->next_ = newNext;
+    newNext->previous_ = newPrevious;
+  }
+};
+
+}  // namespace s21
+
+#endif  // CPP2_S21_CONTAINERS_0_SRC_HEADERS_S21_LIST_H_
