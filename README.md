@@ -9,6 +9,6 @@
 - write an implementation of a map (hash map)
 - write an implementation of a vector
 
-All data structures must be templates
+All data structures are templates
 
 ***Implemented with C++17***
